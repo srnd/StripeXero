@@ -41,16 +41,19 @@ class StripeTransactionSync:
         return txns
 
     def _mapTransaction(self, txn, field):
-        if field in self.config['mappings']:
-            val = self.config['mappings'][field]
-            if isinstance(val, dict):
-                if not('key' in val and 'values' in val and val['key'] in txn.source.metadata):
-                    return None
-                index = txn.source.metadata[val['key']]
-                return val['values'][index] if (index in val['values']) else  None
+        try:
+            if field in self.config['mappings']:
+                val = self.config['mappings'][field]
+                if isinstance(val, dict):
+                    if not('source' in txn and 'metadata' in txn.source and val['key'] in txn.source.metadata):
+                        return None
+                    index = txn.source.metadata[val['key']]
+                    return val['values'][index] if (index in val['values']) else  None
+                else:
+                    return val
             else:
-                return val
-        else:
+                return None
+        except:
             return None
 
     def _formatTransaction(self, txn):
@@ -93,7 +96,7 @@ class StripeTransactionSync:
 
 # 5 Dec 2015
 
-txn_start = datetime.datetime.strptime(sys.argv[1], '%Y-%m-%d')
+txn_start = datetime.strptime(sys.argv[1], '%Y-%m-%d')
 
 s = StripeTransactionSync()
 txns = s._getTransactionsAndFeesAfter(calendar.timegm(txn_start.timetuple()))
